@@ -34,6 +34,8 @@ class PipeManiaState:
 
 class Board:
     """Representação interna de um tabuleiro de PipeMania."""
+    def __init__(self, board):
+        self.board = board
 
     def get_value(self, row: int, col: int) -> str:
         """Devolve o valor na respetiva posição do tabuleiro."""
@@ -64,10 +66,19 @@ class Board:
             > line = stdin.readline().split()
         """
         # TODO
-        pass
+        board = []
+        while(True):
+          row = sys.stdin.readline()
+          if not row:
+              break
+          row = row.strip().split("\t")
+          board.append(row)
+        return Board(board)
 
     # TODO: outros metodos da classe
-
+    def print_board(self):
+        for row in self.board:
+            print(row)
 
 class PipeMania(Problem):
     def __init__(self, board: Board):
@@ -107,7 +118,10 @@ class PipeMania(Problem):
 if __name__ == "__main__":
     # TODO:
     # Ler o ficheiro do standard input,
+    board = Board.parse_instance()
+    board.print_board()
+
+    problem = PipeMania(board)
     # Usar uma técnica de procura para resolver a instância,
     # Retirar a solução a partir do nó resultante,
     # Imprimir para o standard output no formato indicado.
-    pass
