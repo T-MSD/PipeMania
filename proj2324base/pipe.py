@@ -37,6 +37,10 @@ class Board:
     def __init__(self, board):
         self.board = board
 
+    @property
+    def dim(self):
+        return len(self.board)
+    
     def get_value(self, row: int, col: int) -> str:
         """Devolve o valor na respetiva posição do tabuleiro."""
         return self.board[row][col]
@@ -57,12 +61,10 @@ class Board:
         e retorna uma instância da classe Board."""
 
         board = []
-        while(True):
-          row = sys.stdin.readline()
-          if not row:
-              break
-          row = row.strip().split("\t")
-          board.append(row)
+        for row in sys.stdin.readlines():
+            row = row.strip().split("\t")
+            board.append(row)
+            
         return Board(board)
 
     # TODO: outros metodos da classe
@@ -73,8 +75,7 @@ class Board:
 class PipeMania(Problem):
     def __init__(self, board: Board):
         """O construtor especifica o estado inicial."""
-        # TODO
-        pass
+        self.state = PipeManiaState(board)
 
     def actions(self, state: PipeManiaState):
         """Retorna uma lista de ações que podem ser executadas a
@@ -93,9 +94,45 @@ class PipeMania(Problem):
     def goal_test(self, state: PipeManiaState):
         """Retorna True se e só se o estado passado como argumento é
         um estado objetivo. Deve verificar se todas as posições do tabuleiro
-        estão preenchidas de acordo com as regras do problema."""
-        # TODO
-        pass
+        estão preenchidas de acordo com as regras do problema.""" 
+        
+        above = ["FC", "BC", "VC", "LV"]
+        under = ["FB", "BB", "VB", "LV"]
+        AtRight = ["FD", "BD", "VD", "LH"]
+        AtLeft = ["FE", "BE", "VE", "LH"]
+        
+        for row in range(state.board.dim - 1):
+            for col in range(state.board.dim - 1):
+                value = state.board.get_value(row, col)
+                
+                
+        if value == "FB":
+            up, down = state.board.adjacent_vertical_values(row, col)
+            if down not in above:
+                return False
+        
+        if value == "FC":
+            up, down = state.board.adjacent_vertical_values(row, col)
+            if up not in under:
+                return False
+            
+        if value == "FE":
+            right, left = state.board.adjacent_horizontal_values(row, col)
+            if left not in AtRight:
+                return False
+            
+        if value == "FD":
+            right, left = state.board.adjacent_horizontal_values(row, col)
+            if right not in AtLeft:
+                return False
+
+        else:
+            return True
+        
+        
+
+
+        
 
     def h(self, node: Node):
         """Função heuristica utilizada para a procura A*."""
@@ -112,6 +149,7 @@ if __name__ == "__main__":
     board.print_board()
 
     problem = PipeMania(board)
+    print(problem.goal_test(problem.state))
     # Usar uma técnica de procura para resolver a instância,
     # Retirar a solução a partir do nó resultante,
     # Imprimir para o standard output no formato indicado.
