@@ -48,12 +48,16 @@ class Board:
     def adjacent_vertical_values(self, row: int, col: int) -> (str, str):
         """Devolve os valores imediatamente acima e abaixo,
         respectivamente."""
-        return self.board[row - 1][col], self.board[row + 1][col]
+        up = self.board[row - 1][col] if row > 0 else None
+        down = self.board[row + 1][col] if row < len(self.board) - 1 else None
+        return up, down
 
     def adjacent_horizontal_values(self, row: int, col: int) -> (str, str):
         """Devolve os valores imediatamente à esquerda e à direita,
         respectivamente."""
-        return self.board[row][col - 1], self.board[row][col + 1]
+        left = self.board[row][col - 1] if col > 0 else None
+        right = self.board[row][col + 1] if col < len(self.board[row]) - 1 else None
+        return left, right
 
     @staticmethod
     def parse_instance():
@@ -96,39 +100,82 @@ class PipeMania(Problem):
         um estado objetivo. Deve verificar se todas as posições do tabuleiro
         estão preenchidas de acordo com as regras do problema.""" 
         
-        above = ["FC", "BC", "VC", "LV"]
-        under = ["FB", "BB", "VB", "LV"]
-        AtRight = ["FD", "BD", "VD", "LH"]
-        AtLeft = ["FE", "BE", "VE", "LH"]
+        above = ["FC", "BC", "BE", "BD", "VC", "VD", "LV"]
+        under = ["FB", "BB", "BE", "BD", "VB", "VE", "LV"]
+        AtRight = ["FD", "BD", "BC", "BB", "VD", "VB", "LH"]
+        AtLeft = ["FE", "BE", "BC", "BB", "VE", "VC", "LH"]
         
-        for row in range(state.board.dim - 1):
-            for col in range(state.board.dim - 1):
+        for row in range(state.board.dim):
+            for col in range(state.board.dim):
                 value = state.board.get_value(row, col)
+                              
+                print(value)
                 
+                up, down = state.board.adjacent_vertical_values(row, col)
+                left, right = state.board.adjacent_horizontal_values(row, col)
                 
-        if value == "FB":
-            up, down = state.board.adjacent_vertical_values(row, col)
-            if down not in above:
-                return False
-        
-        if value == "FC":
-            up, down = state.board.adjacent_vertical_values(row, col)
-            if up not in under:
-                return False
-            
-        if value == "FE":
-            right, left = state.board.adjacent_horizontal_values(row, col)
-            if left not in AtRight:
-                return False
-            
-        if value == "FD":
-            right, left = state.board.adjacent_horizontal_values(row, col)
-            if right not in AtLeft:
-                return False
+                if value == "FB":
+                    if down not in above:
+                        return False
 
-        else:
-            return True
-        
+                if value == "FC":
+                    if up not in under:
+                        return False
+                    
+                if value == "FE":
+                    if left not in AtRight:
+                        return False
+                    
+                if value == "FD":
+                    if right not in AtLeft:
+                        return False
+                    
+                if value == "BB":
+                    if down not in above or right not in AtLeft or left not in AtRight:
+                        return False
+                    
+                if value == "BC":
+                    if up not in under or right not in AtLeft or left not in AtRight:
+                        return False
+                
+                if value == "BE":
+                    if up not in under or down not in under or left not in AtRight:
+                        return False
+                    
+                if value == "BD":
+                    if up not in down or right not in AtLeft or right not in AtLeft:
+                        return False
+                    
+                if value == "VC":
+                    if up not in under or left not in AtRight:
+                        return False
+                    
+                if value == "VB":
+                    print(down)
+                    print(right)
+                    if down not in above or right not in AtLeft:
+                        return False
+                    
+                if value == "VE":
+                    if down not in above or left not in AtRight:
+                        return False
+                    
+                if value == "VD":
+                    if up not in under or right not in AtLeft:
+                        return False
+                    
+                if value == "LH":
+                    if right not in AtLeft or left not in AtRight:
+                        return False
+                    
+                if value == "LH":
+                    if up not in under or down not in above:
+                        return False
+
+                    
+    
+        return True
+
         
 
 
