@@ -84,9 +84,13 @@ class PipeMania(Problem):
     def actions(self, state: PipeManiaState):
         """Retorna uma lista de ações que podem ser executadas a
         partir do estado passado como argumento."""
+        
+        actions = []
+        
         # TODO
+        
         pass
-
+        
     def result(self, state: PipeManiaState, action):
         """Retorna o estado resultante de executar a 'action' sobre
         'state' passado como argumento. A ação a executar deve ser uma
@@ -197,6 +201,13 @@ if __name__ == "__main__":
 
     problem = PipeMania(board)
     print(problem.goal_test(problem.state))
+    
+    #print(board.get_value(0,0))
+    
+    #print(board.adjacent_vertical_values(0, 0))
+    #print(board.adjacent_horizontal_values(0, 0))
+    #print(board.adjacent_vertical_values(1, 1))
+    #print(board.adjacent_horizontal_values(1, 1))
     # Usar uma técnica de procura para resolver a instância,
     # Retirar a solução a partir do nó resultante,
     # Imprimir para o standard output no formato indicado.
