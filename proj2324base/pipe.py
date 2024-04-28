@@ -58,6 +58,7 @@ class Board:
         left = self.board[row][col - 1] if col > 0 else None
         right = self.board[row][col + 1] if col < len(self.board[row]) - 1 else None
         return left, right
+    
 
     @staticmethod
     def parse_instance():
@@ -87,7 +88,11 @@ class PipeMania(Problem):
         
         actions = []
         
-        # TODO
+        for row in range(state.board.dim):
+            for col in range(state.board.dim):
+                value = state.board.get_value(row, col)
+                
+                
         
         pass
         
