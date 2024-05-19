@@ -505,6 +505,8 @@ class PipeMania(Problem):
                     actions_list.extend(list(border_set))
                 
 
+                # ESTA NUM LOOP INFINITO NAO SEI PORQUE
+
                 
        # random.shuffle(actions_list)   
         #print(actions_list)     
