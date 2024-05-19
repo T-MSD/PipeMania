@@ -97,11 +97,8 @@ class Board:
         return Board(board)
 
     # TODO: outros metodos da classe
-    def print_board(self):
-        #for row in self.board:
-            #print(row)
-            
-        formatted_output = '\n'.join([' '.join(row) for row in self.board])
+    def print_board(self):            
+        formatted_output = '\n'.join(['\t'.join(row) for row in self.board])
         print(formatted_output)
             
             
@@ -116,7 +113,7 @@ class PipeMania(Problem):
         self.initial = PipeManiaState(board)
         self.dim = board.dim
         
-        self.type = {
+        self.types = {
             "F" : ["FC", "FD", "FB", "FE"],
             "V" : ["VC", "VD", "VB", "VE"],
             "B" : ["BC", "BD", "BB", "BE"],
@@ -125,23 +122,23 @@ class PipeMania(Problem):
         
         
         self.rotations ={
-            "FC" : ["FD", "FE"],
-            "FD" : ["FB", "FC"],
-            "FB" : ["FE", "FD"],
-            "FE" : ["FC", "FB"],
+            "FC" : ["FD", "FE", "FB"],
+            "FD" : ["FB", "FC", "FE"],
+            "FB" : ["FE", "FD", "FC"],
+            "FE" : ["FC", "FB", "FD"],
             
-            "BC" : ["BD", "BE"],
-            "BD" : ["BB", "BC"],
-            "BB" : ["BE", "BD"],
-            "BE" : ["BC", "BB"],
+            "BC" : ["BD", "BE", "BB"],
+            "BD" : ["BB", "BC", "BE"],
+            "BB" : ["BE", "BD", "BC"],
+            "BE" : ["BC", "BB", "BD"],
             
-            "VC" : ["VD", "VE"],
-            "VD" : ["VB", "VC"],
-            "VB" : ["VE", "VD"],
-            "VE" : ["VC", "VB"],
+            "VC" : ["VD", "VE", "VD"],
+            "VD" : ["VB", "VC", "VE"],
+            "VB" : ["VE", "VD", "VC"],
+            "VE" : ["VC", "VB", "VD"],
             
-            "LH" : ["LV", "LV"],
-            "LV" : ["LH", "LH"]
+            "LH" : ["LV", "LV", "LV"],
+            "LV" : ["LH", "LH", "LH"]
             }
         
         self.above = ["FC", "BC", "BE", "BD", "VC", "VD", "LV"]
@@ -245,6 +242,25 @@ class PipeMania(Problem):
                 
         return intersection_set
     
+    def checkFechoActions(self, state, row, col):
+        up, down = state.board.adjacent_vertical_values(row, col)
+        left, right = state.board.adjacent_horizontal_values(row, col)
+        
+        value = state.board.get_value(row, col)
+        
+        rotation = self.rotations
+        
+        
+        type = value[0]
+        
+        if type == "F":
+            
+        
+    
+                
+                
+                
+
     
     def checkAvailableConnectionActions(self, state, row, col):
         actions_list = []
@@ -275,94 +291,16 @@ class PipeMania(Problem):
 
         for row in range(state.board.dim):
             for col in range(state.board.dim):
-                value = state.board.get_value(row, col)
-                
-                
-                if not state.board.locked[(row, col)]:
+                value = state.board.get_value(row, col)                
+                #if not state.board.locked[(row, col)]:
                     #actions_list.append((row, col, True))
                     #actions_list.append((row, col, False))
                 
-                
-                    if row == 0 or col == 0 or row == state.board.dim - 1 or col == state.board.dim - 1:
-                        border_set = self.checkBorderActions(value, row, col)
-                        actions_list.extend(list(border_set))
-                        
-                    else:
-                        available_set = self.checkAvailableConnectionActions(state, row, col)
-                        stuck_set = self.checkStuckActions(state, row, col)
-                        actions_list.extend(list(available_set))
-                        actions_list.extend(list(stuck_set))    
 
                 
-        #random.shuffle(actions_list)   
+        random.shuffle(actions_list)   
         #print(actions_list)     
         return actions_list
-    
-    def readyToBeLocked(self, state, row, col):
-        
-        #eu tenho de ver ocmo faco estas pecas pararem de rodar porque se nao fica presa na mesma
-        value = state.board.get_value(row, col)      
-        up, down = state.board.adjacent_vertical_values(row, col)
-        left, right = state.board.adjacent_horizontal_values(row, col)
-        
-        if value == "FB":
-            if down == None:
-                return False
-
-        elif value == "FC":
-            if up == None:
-                return False
-            
-        elif value == "FE":
-            if left == None:
-                return False
-            
-        elif value == "FD":
-            if right == None:
-                return False
-            
-        elif value == "BB":
-            if down not in self.above or right not in self.AtLeft or left not in self.AtRight:
-                return False
-            
-        elif value == "BC":
-            if up not in self.under or right not in self.AtLeft or left not in self.AtRight:
-                return False
-        
-        elif value == "BE":
-            if up not in self.under or down not in self.above or left not in self.AtRight:
-                return False
-            
-        elif value == "BD":
-            if up not in self.under or right not in self.AtLeft or down not in self.above:
-                return False
-            
-        elif value == "VC":
-            if up == None or left == None:
-                return False
-            
-        elif value == "VB":
-            if down == None or right == None:
-                return False
-            
-        elif value == "VE":
-            if down == None or left == None:
-                return False
-            
-        elif value == "VD":
-            if up == None or right == None:
-                return False
-            
-        elif value == "LH":
-            if right not in self.AtLeft or left not in self.AtRight:
-                return False
-            
-        elif value == "LV":
-            if up not in self.under or down not in self.above:
-                return False
-
-        return True
-        
         
         
         
@@ -372,25 +310,17 @@ class PipeMania(Problem):
         das presentes na lista obtida pela execução de
         self.actions(state)."""
     
-        row, col, direction = action
+        row, col, new_value = action
         value = state.board.get_value(row, col)
-        rotation = self.rotations[value]
         
         
         
         new_Board = copy.deepcopy(state.board)
-        
-        if direction:
-            new_Board.board[row][col] = rotation[0]
-        
-        
-            
-        if (self.readyToBeLocked(state, row, col)):
-            new_Board.locked[(row, col)] = True
     
-        print("----====----")
-        new_Board.print_board()
-        print("----====----")
+        new_Board.board[row][col] = new_value
+        #print("----====----")
+        #new_Board.print_board()
+        #print("----====----")
 
         return PipeManiaState(new_Board)
         
