@@ -178,8 +178,130 @@ class PipeMania(Problem):
         
         return False
         
-    
-    def checkBorderActions(self, value, row, col, state: PipeManiaState):
+    def checkRightBorderActions(self, value, row, col):
+        actions_list = []
+
+        # Topo esquerdo
+        if row == 0 and col == 0:
+            if value == 'FB':
+                actions_list.append((row, col, 'FD'))
+                return set(actions_list)
+            elif value == 'FD':
+                actions_list.append((row, col, 'FB'))
+                return set(actions_list)
+        
+        # Topo direito
+        elif row == 0 and col == self.dim - 1:
+            if value == 'FE':
+                actions_list.append((row, col, 'FB'))
+                return set(actions_list)
+            elif value == 'FB':
+                actions_list.append((row, col, 'FE'))
+                return set(actions_list)
+        
+        # Topo meio
+        elif row == 0 and col not in [0, self.dim - 1]:
+           if value == 'FB':
+               actions_list.append((row, col, 'FE'))
+               actions_list.append((row, col, 'FD'))
+               return set(actions_list)
+           elif value == 'FE':
+               actions_list.append((row, col, 'FB'))
+               actions_list.append((row, col, 'FD'))
+               return set(actions_list)
+           elif value == 'FD':
+               actions_list.append((row, col, 'FB'))
+               actions_list.append((row, col, 'FE'))
+               return set(actions_list)
+           elif value == 'VB':
+               actions_list.append((row, col, 'VE'))
+               return set(actions_list)
+           elif value == 'VE':
+               actions_list.append((row, col, 'VB'))
+               return set(actions_list)
+            
+        # Baixo esquerdo
+        elif row == self.dim - 1 and col == 0:
+            if value == 'FD':
+                actions_list.append((row, col, 'FC'))
+                return set(actions_list)
+            elif value == 'FC':
+                actions_list.append((row, col, 'FD'))
+                return set(actions_list)
+            
+        # Baixo direito
+        elif row == self.dim - 1 and col == self.dim - 1:
+            if value == 'FE':
+                actions_list.append((row, col, 'FC'))
+                return set(actions_list)
+            elif value == 'FC':
+                actions_list.append((row, col, 'FE'))
+                return set(actions_list)
+        
+        elif row == self.dim - 1 and col not in [0, self.dim - 1]:
+            if value == 'FC':
+                actions_list.append((row, col, 'FD'))
+                actions_list.append((row, col, 'FE'))
+                return set(actions_list)
+            elif value == 'FD':
+                actions_list.append((row, col, 'FC'))
+                actions_list.append((row, col, 'FE'))
+                return set(actions_list)
+            elif value == 'FE':
+                actions_list.append((row, col, 'FD'))
+                actions_list.append((row, col, 'FC'))
+                return set(actions_list)
+            elif value == 'VC':
+                actions_list.append((row, col, 'VD'))
+                return set(actions_list)
+            elif value == 'VD':
+                actions_list.append((row, col, 'VC'))
+                return set(actions_list)
+        
+        # Lateral esquerda
+        elif row not in [0, self.dim - 1] and col == 0:
+            if value == 'FC':
+                actions_list.append((row, col, 'FD'))
+                actions_list.append((row, col, 'FB'))
+                return set(actions_list)
+            elif value == 'FB':
+                actions_list.append((row, col, 'FD'))
+                actions_list.append((row, col, 'FC'))
+                return set(actions_list)
+            elif value == 'FD':
+                actions_list.append((row, col, 'FC'))
+                actions_list.append((row, col, 'FB'))
+                return set(actions_list)
+            elif value == 'VB':
+                actions_list.append((row, col, 'VD'))
+                return set(actions_list)
+            elif value == 'VD':
+                actions_list.append((row, col, 'VB'))
+                return set(actions_list)
+          
+        # Lateral direita
+        elif row not in [0, self.dim - 1] and col == self.dim - 1:
+            if value == 'FE':
+                actions_list.append((row, col, 'FB'))
+                actions_list.append((row, col, 'FC'))
+                return set(actions_list)
+            elif value == 'FC':
+                actions_list.append((row, col, 'FB'))
+                actions_list.append((row, col, 'FE'))
+                return set(actions_list)
+            elif value == 'FB':
+                actions_list.append((row, col, 'FE'))
+                actions_list.append((row, col, 'FC'))
+                return set(actions_list)
+            elif value == 'VC':
+                actions_list.append((row, col, 'VE'))
+                return set(actions_list)
+            elif value == 'VE':
+                actions_list.append((row, col, 'VC'))
+                return set(actions_list)
+        return set(actions_list)
+
+    def checkWrongBorderActions(self, value, row, col, state: PipeManiaState):
         actions_list = []
 
         # Topo esquerdo
@@ -265,6 +387,7 @@ class PipeMania(Problem):
                   actions_list.append((row, col, 'VC'))
                 return set(actions_list)
         
+        # Meio baixo
         elif row == self.dim - 1 and col not in [0, self.dim - 1]:
             if value == 'LV':
                 if value == 'LH':
@@ -371,8 +494,12 @@ class PipeMania(Problem):
                 value = state.board.get_value(row, col)                
                 if not state.board.locked[(row, col)]:
                   if self.isBorder(row, col):
-                    border_set = self.checkBorderActions(value, row, col, state)
-                    actions_list.extend(list(border_set))
+                    border_set = self.checkWrongBorderActions(value, row, col, state)
+                    if len(border_set) == 0:
+                        border_set = self.checkRightBorderActions(value, row, col)
+                        actions_list.extend(list(border_set))
+                    else:
+                        actions_list.extend(list(border_set))
                   else:
                     border_set = self.F_Actions(value, row, col)
                     actions_list.extend(list(border_set))
