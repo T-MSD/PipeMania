@@ -481,28 +481,25 @@ class PipeMania(Problem):
             
         return actions_list
     
+    
+    
+   
+    
     def All_Actions(self, value, row, col, state):
         actions_list = []
-        
-        up, down = state.board.adjacent_vertical_values(row, col)
-        left, right = state.board.adjacent_horizontal_values(row, col)
         
         for rotation in self.rotations[value]:
             actions_list.append((row, col, rotation))
 
         return actions_list
+
     
-    # TODO: Fazer função que da lock logo no inicio
-    
-    def Instant_Actions(self):
-        
-        
-        #falta ver os casos dos F em que estao virados para uma peca locked e reduzir o numero de acoes
-        
+    def Instant_Actions(self):      
+        #falta ver os casos dos F em que estao virados para uma peca locked e reduzir o numero de acoes   
         # Topo esquerdo
         if self.initial.board.board[0][0][0] == "V":  
             self.initial.board.board[0][0] = "VB"        
-            self.initial.board.locked[(0, 0)] = True
+            self.initial.board.locked[(0, 0)] = True    
             
         # Topo direito
         if self.initial.board.board[0][self.dim - 1][0] == "V":  
@@ -558,37 +555,102 @@ class PipeMania(Problem):
             elif self.initial.board.board[row][self.dim - 1][0] == "B":
                 self.initial.board.board[row][self.dim - 1] = "BE"
                 self.initial.board.locked[(row, self.dim - 1)] = True
+                              
+        #So para F aqui em baixo
         
-    
-    def F_Actions(self, value, row, col, state):
-        actions_list = []
-        
-        if self.checkUpConnection:
-            actions_list.append((row, col, "FC"))
-                
-        elif self.checkDownConnection:
-            actions_list.append((row, col, "FB"))
-        
-        elif self.checkLeftConnection:
-            actions_list.append((row, col, "FE"))
+        #canto sup esquerdo
+        if self.initial.board.board[0][0][0] == "F":
+            if self.initial.board.locked[(1, 0)] and self.initial.board.board[1][0] in self.above:
+                self.initial.board.board[0][0] = "FB"
+                self.initial.board.locked[(0, 0)] = True
             
-        elif self.checkRightConnection:
-            actions_list.append((row, col, "FD"))
-        
-        return actions_list
+            elif self.initial.board.locked[(0, 1)] and self.initial.board.board[0][1] in self.AtLeft:
+                self.initial.board.board[0][0] = "FD"
+                self.initial.board.locked[(0, 0)] = True 
+              
+        #canto sup direito  
+        if self.initial.board.board[0][self.dim - 1][0] == "F":
+            if self.initial.board.locked[(0, self.dim - 2)] and self.initial.board.board[0][self.dim - 2] in self.AtRight:
+                self.initial.board.board[0][self.dim - 1] = "FE"
+                self.initial.board.locked[(0, self.dim - 1)] = True
+            
+            elif self.initial.board.locked[(1, self.dim - 1)] and self.initial.board.board[1][self.dim - 1] in self.above:
+                self.initial.board.board[0][self.dim - 1] = "FB"
+                self.initial.board.locked[(0, self.dim - 1)] = True 
+                
+        #canto inf esquerdo
+        if self.initial.board.board[self.dim - 1][0][0] == "F":
+            if self.initial.board.locked[(self.dim - 2, 0)] and self.initial.board.board[self.dim - 2][0] in self.under:
+                self.initial.board.board[self.dim - 1][0] = "FC"
+                self.initial.board.locked[(self.dim - 1, 0)] = True
+            
+            elif self.initial.board.locked[(self.dim - 1, 1)] and self.initial.board.board[self.dim - 1][1] in self.AtLeft:
+                self.initial.board.board[self.dim - 1][0] = "FD"
+                self.initial.board.locked[(self.dim - 1, 0)] = True 
+                
+        #canto inf direito  
+        if self.initial.board.board[self.dim - 1][self.dim - 1][0] == "F":
+            if self.initial.board.locked[(self.dim - 2, self.dim - 1)] and self.initial.board.board[self.dim - 2][self.dim - 1] in self.under:
+                self.initial.board.board[self.dim - 1][self.dim - 1] = "FC"
+                self.initial.board.locked[(self.dim - 1, self.dim - 1)] = True
+            
+            elif self.initial.board.locked[(self.dim - 1, self.dim - 2)] and self.initial.board.board[self.dim - 1][self.dim - 2] in self.AtRight:
+                self.initial.board.board[self.dim - 1][self.dim - 1] = "FE"
+                self.initial.board.locked[(self.dim - 1, self.dim - 1)] = True 
+                
+        return
+                
     
     def L_Actions(self, value, row, col, state):
         actions_list = []
         
-        if self.checkUpConnection and self.checkDownConnection:
-            actions_list.append((row, col, "LV"))
-            
-        elif self.checkRightConnection and self.checkLeftConnection:
-            actions_list.append((row, col, "LH"))
+        
             
         return actions_list
+    
+    
+    def F_Actions(self, value, row, col, state):
+        actions_list = []
+
+        up, down = state.board.adjacent_vertical_values(row, col)
+        left, right = state.board.adjacent_horizontal_values(row, col)
         
+        if value[0] == "F":
+            if up in self.under and state.board.locked[(row + 1, col)] == True:
+                actions_list.append((row, col, "FC"))
+                
+            if down in self.above and state.board.locked[(row - 1, col)] == True:
+                actions_list.append((row, col, "FB"))
+                
+            if right in self.AtLeft and state.board.locked[(row, col - 1)] == True:
+                actions_list.append((row, col, "FD"))
+            
+            if left in self.AtRight and state.board.locked[(row, col + 1)] == True:
+                actions_list.append((row, col, "FE"))
+                
+        return actions_list
+    
+    def B_Actions(self, value, row, col, state):
+        actions_list = []
         
+        up, down = state.board.adjacent_vertical_values(row, col)
+        left, right = state.board.adjacent_horizontal_values(row, col)
+        
+        if value[0] == "B":
+            if up not in self.under and state.board.locked[(row + 1, col)] == True:
+                actions_list.append((row, col, "BB"))
+                
+            if down not in self.above and state.board.locked[(row - 1, col)] == True:
+                actions_list.append((row, col, "BC"))
+                
+            if right not in self.AtLeft and state.board.locked[(row, col - 1)] == True:
+                actions_list.append((row, col, "BE"))
+            
+            if left not in self.AtRight and state.board.locked[(row, col + 1)] == True:
+                actions_list.append((row, col, "BD"))
+                
+        return actions_list
+                
     def isBorder(self, row, col):
         return row == 0 or col == 0 or row == self.dim - 1 or col == self.dim - 1
         
@@ -604,25 +666,28 @@ class PipeMania(Problem):
                 if not state.board.locked[(row, col)]:
                   if self.isBorder(row, col):
                     wrong_border_list = self.checkWrongBorderActions(value, row, col, state)
-                    
-                    
-                    #tamos a dar lock no wornd border mas no right nao porque e oq faz dar lock em cima e nao so no result !#!(#!*#)(*!&#*&!%#&!^%#&!^@%!&^$!&#^!%@&!^%$*!&#^!*(#&^!#))
-                    right_border_list = self.checkRightBorderActions(value, row, col)
+                    right_border_list = self.checkRightBorderActions(value, row, col) #porque nao damos lock a nada aqui
                     
                     actions_list.extend(wrong_border_list)
                     actions_list.extend(right_border_list)
                   else:
                       
-                    '''if value[0] == "F":
+                    if value[0] == "F":
                         f_actions_list = self.F_Actions(value, row, col, state)
                         actions_list.extend(f_actions_list)
-                
-                    else:'''
-                    all_actions_list = self.All_Actions(value, row, col, state)
-                    actions_list.extend(all_actions_list)
-                
+                        
+                        '''if value[0] == "B":
+                            b_actions_list = self.B_Actions(value, row, col, state)
+                            actions_list.extend(b_actions_list)'''
+                            
+                        #algo esta mal com o b quando esta dentro
+                   
+                   
 
-                # ESTA NUM LOOP INFINITO NAO SEI PORQUE
+        
+                    else: 
+                        all_actions_list = self.All_Actions(value, row, col, state)
+                        actions_list.extend(all_actions_list)
 
                 
         #random.shuffle(actions_list)   
@@ -642,9 +707,9 @@ class PipeMania(Problem):
             new_Board = copy.deepcopy(state.board)
             new_Board.board[row][col] = new_value
             new_Board.locked[(row, col)] = True
-            #print("----====----")
-            #new_Board.print_board()
-            #print("----====----")
+            print("----====----")
+            new_Board.print_board()
+            print("----====----")
             return PipeManiaState(new_Board)
         
         
