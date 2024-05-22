@@ -19,6 +19,7 @@ from search import (
     recursive_best_first_search,
 )
 
+
 class PipeManiaState:
     state_id = 0
 
@@ -48,6 +49,7 @@ class PipeManiaState:
     def __hash__(self) -> int:
         return self.hash
         
+
 class Board:
     """Representação interna de um tabuleiro de PipeMania."""
     def __init__(self, board):
@@ -89,6 +91,8 @@ class Board:
     def getLockedLeft(self, row, col):
         return self.locked[(row, col - 1)] if col > 0 else None
 
+    
+
     @staticmethod
     def parse_instance():
         """Lê o test do standard input (stdin) que é passado como argumento
@@ -105,9 +109,11 @@ class Board:
             
         return Board(board)
 
+    # TODO: outros metodos da classe
     def print_board(self):            
         formatted_output = '\n'.join(['\t'.join(row) for row in self.board])
         print(formatted_output)
+            
             
     def __eq__(self, value: object) -> bool:
         isEqual = isinstance(value, Board) and self.board == value.board
@@ -119,12 +125,386 @@ class PipeMania(Problem):
         
         self.initial = PipeManiaState(board)
         self.dim = board.dim
-    
+        
+        self.types = {
+            "F" : ["FC", "FD", "FB", "FE"],
+            "V" : ["VC", "VD", "VB", "VE"],
+            "B" : ["BC", "BD", "BB", "BE"],
+            "L" : ["LH", "LV"]
+        }
+        
+        
+        self.rotations ={
+            "FC" : ["FD", "FE", "FB"],
+            "FD" : ["FB", "FC", "FE"],
+            "FB" : ["FE", "FD", "FC"],
+            "FE" : ["FC", "FB", "FD"],
+            
+            "BC" : ["BD", "BE", "BB"],
+            "BD" : ["BB", "BC", "BE"],
+            "BB" : ["BE", "BD", "BC"],
+            "BE" : ["BC", "BB", "BD"],
+            
+            "VC" : ["VD", "VE", "VD"],
+            "VD" : ["VB", "VC", "VE"],
+            "VB" : ["VE", "VD", "VC"],
+            "VE" : ["VC", "VB", "VD"],
+            
+            "LH" : ["LV", "LV", "LV"],
+            "LV" : ["LH", "LH", "LH"]
+            }
+        
         self.above = ["FC", "BC", "BE", "BD", "VC", "VD", "LV"]
         self.under = ["FB", "BB", "BE", "BD", "VB", "VE", "LV"]
         self.AtRight = ["FD", "BD", "BC", "BB", "VD", "VB", "LH"]
         self.AtLeft = ["FE", "BE", "BC", "BB", "VE", "VC", "LH"]
+        
+    def checkUpConnection(self, state, row, col):
+        up, down = state.board.adjacent_vertical_values(row, col)
+        
+        if up in self.under:
+            return True
+        
+        return False
+
+    def checkDownConnection(self, state, row, col):
+        up, down = state.board.adjacent_vertical_values(row, col)
+        
+        if down in self.above:
+            return True
+        
+        return False
+    
+    def checkRightConnection(self, state, row, col):
+        left, right = state.board.adjacent_horizontal_values(row, col)
+        
+        if right in self.AtLeft:
+            return True
+        
+        return False
+    
+    def checkLeftConnection(self, state, row, col):
+        left, right = state.board.adjacent_horizontal_values(row, col)
+        
+        if left in self.AtRight:
+            return True
+        
+        return False
+        
+    def checkRightBorderActions(self, value, row, col):
+        actions_list = []
+
+        # Topo esquerdo
+        if row == 0 and col == 0:
+            if value == 'FB':
+                actions_list.append((row, col, 'FD'))
+                return actions_list
+            elif value == 'FD':
+                actions_list.append((row, col, 'FB'))
+                return actions_list
+        
+        # Topo direito
+        elif row == 0 and col == self.dim - 1:
+            if value == 'FE':
+                actions_list.append((row, col, 'FB'))
+                return actions_list
+            elif value == 'FB':
+                actions_list.append((row, col, 'FE'))
+                return actions_list
+        
+        # Topo meio
+        elif row == 0 and col not in [0, self.dim - 1]:
+           if value == 'FB':
+               actions_list.append((row, col, 'FE'))
+               actions_list.append((row, col, 'FD'))
+               return actions_list
+           elif value == 'FE':
+               actions_list.append((row, col, 'FB'))
+               actions_list.append((row, col, 'FD'))
+               return actions_list
+           elif value == 'FD':
+               actions_list.append((row, col, 'FB'))
+               actions_list.append((row, col, 'FE'))
+               return actions_list
+           elif value == 'VB':
+               actions_list.append((row, col, 'VE'))
+               return actions_list
+           elif value == 'VE':
+               actions_list.append((row, col, 'VB'))
+               return actions_list
             
+        # Baixo esquerdo
+        elif row == self.dim - 1 and col == 0:
+            if value == 'FD':
+                actions_list.append((row, col, 'FC'))
+                return actions_list
+            elif value == 'FC':
+                actions_list.append((row, col, 'FD'))
+                return actions_list
+            
+        # Baixo direito
+        elif row == self.dim - 1 and col == self.dim - 1:
+            if value == 'FE':
+                actions_list.append((row, col, 'FC'))
+                return actions_list
+            elif value == 'FC':
+                actions_list.append((row, col, 'FE'))
+                return actions_list
+        
+        elif row == self.dim - 1 and col not in [0, self.dim - 1]:
+            if value == 'FC':
+                actions_list.append((row, col, 'FD'))
+                actions_list.append((row, col, 'FE'))
+                return actions_list
+            elif value == 'FD':
+                actions_list.append((row, col, 'FC'))
+                actions_list.append((row, col, 'FE'))
+                return actions_list
+            elif value == 'FE':
+                actions_list.append((row, col, 'FD'))
+                actions_list.append((row, col, 'FC'))
+                return actions_list
+            elif value == 'VC':
+                actions_list.append((row, col, 'VD'))
+                return actions_list
+            elif value == 'VD':
+                actions_list.append((row, col, 'VC'))
+                return actions_list
+        
+        # Lateral esquerda
+        elif row not in [0, self.dim - 1] and col == 0:
+            if value == 'FC':
+                actions_list.append((row, col, 'FD'))
+                actions_list.append((row, col, 'FB'))
+                return actions_list
+            elif value == 'FB':
+                actions_list.append((row, col, 'FD'))
+                actions_list.append((row, col, 'FC'))
+                return actions_list
+            elif value == 'FD':
+                actions_list.append((row, col, 'FC'))
+                actions_list.append((row, col, 'FB'))
+                return actions_list
+            elif value == 'VB':
+                actions_list.append((row, col, 'VD'))
+                return actions_list
+            elif value == 'VD':
+                actions_list.append((row, col, 'VB'))
+                return actions_list
+          
+        # Lateral direita
+        elif row not in [0, self.dim - 1] and col == self.dim - 1:
+            if value == 'FE':
+                actions_list.append((row, col, 'FB'))
+                actions_list.append((row, col, 'FC'))
+                return actions_list
+            elif value == 'FC':
+                actions_list.append((row, col, 'FB'))
+                actions_list.append((row, col, 'FE'))
+                return actions_list
+            elif value == 'FB':
+                actions_list.append((row, col, 'FE'))
+                actions_list.append((row, col, 'FC'))
+                return actions_list
+            elif value == 'VC':
+                actions_list.append((row, col, 'VE'))
+                return actions_list
+            elif value == 'VE':
+                actions_list.append((row, col, 'VC'))
+                return actions_list
+        return actions_list
+
+    def checkWrongBorderActions(self, value, row, col, state: PipeManiaState):
+        actions_list = []
+
+        # Topo esquerdo
+        if row == 0 and col == 0 :
+            if value in ['FC', 'FE']:
+                
+                actions_list.append((row, col, 'FD'))
+                actions_list.append((row, col, 'FB'))
+                return actions_list
+            
+            elif value == 'VB':
+                state.board.locked[(row, col)] = True
+                return actions_list
+            
+            elif value in ['VC', 'VE', 'VD']:
+                actions_list.append((row, col, 'VB'))
+                return actions_list
+        
+        # Topo direito
+        elif row == 0 and col == self.dim - 1:
+            if value in ['FC', 'FD']:
+                actions_list.append((row, col, 'FE'))
+                actions_list.append((row, col, 'FB'))
+                return actions_list
+            
+            elif value == 'VE':
+                    state.board.locked[(row, col)] = True
+            
+            elif value in ['VC', 'VB', 'VD']:
+                actions_list.append((row, col, 'VE'))
+                return actions_list
+            
+        # Topo meio
+        elif row == 0 and col not in [0, self.dim - 1]:
+            if value == 'LH':
+                state.board.locked[(row, col)] = True
+                return actions_list 
+               
+            elif value == 'LV':
+                actions_list.append((row, col, 'LH'))
+                return actions_list
+            
+            elif value == 'BB':
+                state.board.locked[(row, col)] = True
+                return actions_list
+            
+            elif value in ['BE', 'BD', 'BC']:
+                actions_list.append((row, col, 'BB'))
+                return actions_list
+            
+            elif value == 'FC':
+                actions_list.append((row, col, 'FB'))
+                actions_list.append((row, col, 'FE'))
+                actions_list.append((row, col, 'FD'))
+                return actions_list
+
+            elif value in ['VC', 'VD']:
+                actions_list.append((row, col, 'VB'))
+                actions_list.append((row, col, 'VE'))
+                return actions_list
+        
+        # Baixo esquerdo
+        elif row == self.dim - 1 and col == 0:
+            if value in ['FB', 'FE']:
+                actions_list.append((row, col, 'FC'))
+                actions_list.append((row, col, 'FD'))
+                return actions_list
+            
+            elif value == 'VD':
+                state.board.locked[(row, col)] = True
+                return actions_list
+            
+            elif value in ['VC', 'VB', 'VE']:
+                actions_list.append((row, col, 'VD'))
+                return actions_list
+            
+        # Baixo direito
+        elif row == self.dim - 1 and col == self.dim - 1:
+            if value in ['FB', 'FD']:
+                actions_list.append((row, col, 'FE'))
+                actions_list.append((row, col, 'FC'))
+                return actions_list
+            
+            elif value == 'VC':
+                state.board.locked[(row, col)] = True
+            
+            elif value in ['VD', 'VB', 'VE']:
+                actions_list.append((row, col, 'VC'))
+                return actions_list
+        
+        # Meio baixo
+        elif row == self.dim - 1 and col not in [0, self.dim - 1]:
+            if value == 'LH':
+                state.board.locked[(row, col)] = True
+                return actions_list
+                    
+            elif value == 'LV':
+                actions_list.append((row, col, 'LH'))
+                return actions_list
+            
+            elif value == 'BC':
+                state.board.locked[(row, col)] = True
+                return actions_list
+            
+            elif value in ['BB', 'BE', 'BD']:
+                actions_list.append((row, col, 'BC'))
+                return actions_list
+            
+            if value == 'FB':
+                actions_list.append((row, col, 'FC'))
+                actions_list.append((row, col, 'FD'))
+                actions_list.append((row, col, 'FE'))
+                return actions_list
+
+            if value in ['VB', 'VE']:
+                actions_list.append((row, col, 'VC'))
+                actions_list.append((row, col, 'VD'))
+                return actions_list
+        
+        # Lateral esquerda
+        elif row not in [0, self.dim - 1] and col == 0:
+            if value == 'LV':
+                state.board.locked[(row, col)] = True
+                return actions_list
+            
+            elif value == 'LH':
+                actions_list.append((row, col, 'LV'))
+                return actions_list
+            
+            elif value == 'FE':
+                actions_list.append((row, col, 'FC'))
+                actions_list.append((row, col, 'FD'))
+                actions_list.append((row, col, 'FB'))
+                return actions_list
+            
+            elif value == 'BD':
+                state.board.locked[(row, col)] = True
+                return actions_list
+            
+            elif value in ['BC', 'BB', 'BE']:
+                actions_list.append((row, col, 'BD'))
+                return actions_list
+            
+            elif value in ['VC', 'VE']:
+                actions_list.append((row, col, 'VB'))
+                actions_list.append((row, col, 'VD'))
+                return actions_list
+            
+        # Lateral direita
+        elif row not in [0, self.dim - 1] and col == self.dim - 1:
+            if value == 'LV':
+                state.board.locked[(row, col)] = True
+                return actions_list
+                
+            elif value == 'LH':
+                actions_list.append((row, col, 'LV'))
+                return actions_list
+            
+            elif value == 'FD':
+                actions_list.append((row, col, 'FE'))
+                actions_list.append((row, col, 'FB'))
+                actions_list.append((row, col, 'FC'))
+                return actions_list
+            
+            elif value == 'BE':
+                state.board.locked[(row, col)] = True
+                return actions_list
+            
+            elif value in ['BC', 'BB', 'BD']:
+                
+                actions_list.append((row, col, 'BE'))
+                return actions_list
+            
+            elif value in ['VB', 'VD']:
+                actions_list.append((col, row, 'VC'))
+                actions_list.append((col, row, 'VE'))
+                return actions_list
+            
+        return actions_list    
+
+    
+    def All_Actions(self, value, row, col, state):
+        actions_list = []
+        
+        for rotation in self.rotations[value]:
+            actions_list.append((row, col, rotation))
+
+        return actions_list
+
+    
     def Instant_Actions(self):      
         #falta ver os casos dos F em que estao virados para uma peca locked e reduzir o numero de acoes   
         # Topo esquerdo
@@ -231,9 +611,61 @@ class PipeMania(Problem):
                 
         return
                 
+    
+    def L_Actions(self, value, row, col, state):
+        actions_list = []
+        
+        
+            
+        return actions_list
+    
+    
+    def F_Actions(self, value, row, col, state):
+        actions_list = []
+
+        up, down = state.board.adjacent_vertical_values(row, col)
+        left, right = state.board.adjacent_horizontal_values(row, col)
+        
+        if value[0] == "F":
+            if up in self.under and state.board.locked[(row + 1, col)] == True:
+                actions_list.append((row, col, "FC"))
+                
+            if down in self.above and state.board.locked[(row - 1, col)] == True:
+                actions_list.append((row, col, "FB"))
+                
+            if right in self.AtLeft and state.board.locked[(row, col - 1)] == True:
+                actions_list.append((row, col, "FD"))
+            
+            if left in self.AtRight and state.board.locked[(row, col + 1)] == True:
+                actions_list.append((row, col, "FE"))
+                
+        return actions_list
+    
+    def B_Actions(self, value, row, col, state):
+        actions_list = []
+        
+        up, down = state.board.adjacent_vertical_values(row, col)
+        left, right = state.board.adjacent_horizontal_values(row, col)
+        
+        if value[0] == "B":
+            if up not in self.under and state.board.locked[(row + 1, col)] == True:
+                actions_list.append((row, col, "BB"))
+                
+            if down not in self.above and state.board.locked[(row - 1, col)] == True:
+                actions_list.append((row, col, "BC"))
+                
+            if right not in self.AtLeft and state.board.locked[(row, col - 1)] == True:
+                actions_list.append((row, col, "BE"))
+            
+            if left not in self.AtRight and state.board.locked[(row, col + 1)] == True:
+                actions_list.append((row, col, "BD"))
+                
+        return actions_list
+                
     def isBorder(self, row, col):
         return row == 0 or col == 0 or row == self.dim - 1 or col == self.dim - 1
         
+    
     def doFinalActions(self, state, row, col, value):
         
         upLock = state.board.getLockedUp(row, col)
@@ -319,6 +751,13 @@ class PipeMania(Problem):
                 
                 return actions_list
                     
+                    
+                    
+                    
+                    
+    
+    
+    
     def actions(self, state: PipeManiaState):
         """Retorna uma lista de ações que podem ser executadas a
         partir do estado passado como argumento."""
@@ -333,8 +772,40 @@ class PipeMania(Problem):
                     
                     if actions_list:
                         return actions_list
+                    
+                    
+
+                    '''if self.isBorder(row, col):
+                        wrong_border_list = self.checkWrongBorderActions(value, row, col, state)
+                        right_border_list = self.checkRightBorderActions(value, row, col) #porque nao damos lock a nada aqui
                         
+                        actions_list.extend(wrong_border_list)
+                        actions_list.extend(right_border_list)
+                    else:
+                        
+                        if value[0] == "F":
+                            f_actions_list = self.F_Actions(value, row, col, state)
+                            actions_list.extend(f_actions_list)
+                            
+                            if value[0] == "B":
+                                b_actions_list = self.B_Actions(value, row, col, state)
+                                actions_list.extend(b_actions_list)
+                                
+                                #algo esta mal com o b quando esta dentro
+                        
+                            
+
+                    
+                            else: 
+                                all_actions_list = self.All_Actions(value, row, col, state)
+                                actions_list.extend(all_actions_list)'''
+                                
+                
+        #random.shuffle(actions_list)   
+        #print(actions_list)     
         return actions_list
+        
+        
         
     def result(self, state: PipeManiaState, action):
         """Retorna o estado resultante de executar a 'action' sobre
@@ -347,8 +818,16 @@ class PipeMania(Problem):
             new_Board = copy.deepcopy(state.board)
             new_Board.board[row][col] = new_value
             new_Board.locked[(row, col)] = True
+            #print("----====----")
+            #new_Board.print_board()
+            #print("----====----")
             return PipeManiaState(new_Board)
         
+        
+        '''print("----====----")
+        new_Board.print_board()
+        print("----====----")'''
+
         return state
         
                     
@@ -360,6 +839,8 @@ class PipeMania(Problem):
         """Retorna True se e só se o estado passado como argumento é
         um estado objetivo. Deve verificar se todas as posições do tabuleiro
         estão preenchidas de acordo com as regras do problema.""" 
+        
+
         
         for row in range(state.board.dim):
             for col in range(state.board.dim):
@@ -448,8 +929,23 @@ if __name__ == "__main__":
         "VC	BB	LH",
         "FE	VB	FD"
     ]
+    # Ler grelha do figura 1a:
     board = Board.parse_instance()
+    
+    # Criar uma instância de PipeMania:
     problem = PipeMania(board)
+        
     problem.Instant_Actions()
+
+
+    # Obter o nó solução usando a procura em profundidade:
     goal_node = depth_first_tree_search(problem)
+    # Verificar se foi atingida a solução
+    #print("asdasdasdasd: ", problem.actions(goal_node.state.board.actions))
+    #print("Is goal?", problem.goal_test(goal_node.state))
     goal_node.state.board.print_board()
+    
+    # Verificar se foi atingida a solução
+    #print("Is goal?", problem.goal_test(s1))
+    #print("Is goal?", problem.goal_test(s2))
+    #print("Solution:\n", s2.board.print_board(), sep="")
